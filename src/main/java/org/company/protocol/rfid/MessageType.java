@@ -3,6 +3,7 @@ package org.company.protocol.rfid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.company.protocol.rfid.message.LoginResponse;
 import org.company.protocol.rfid.message.RegisterResponse;
 import org.jetlinks.core.utils.BytesUtils;
 import org.company.protocol.rfid.message.Login;
@@ -18,7 +19,8 @@ import java.util.function.Supplier;
 public enum MessageType {
     REGISTER((short)0x0008, "注册", Register::new),
     REGISTER_RESPONSE((short)0x8008, "注册回复", RegisterResponse::new),
-    LOGIN((short)0x0001, "登录", Login::new);
+    LOGIN((short)0x0001, "登录", Login::new),
+    LOGIN_RESPONSE((short)0x8001, "登录回复", LoginResponse::new);
 
     private short id;
 

@@ -4,9 +4,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Hex;
 import org.company.protocol.rfid.message.Login;
 import org.company.protocol.rfid.message.Register;
+import org.company.protocol.rfid.message.RegisterResponse;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.message.DeviceOnlineMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
@@ -36,7 +36,6 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             FromDeviceMessageContext ctx = ((FromDeviceMessageContext) messageDecodeContext);
             ByteBuf byteBuf = ctx.getMessage().getPayload();
             byte[] payload = ByteBufUtil.getBytes(byteBuf, 0, byteBuf.readableBytes(), false);
-            log.info("Hello: " + Hex.encodeHexString(payload));
             DeviceSession session = ctx.getSession();
             TcpMessage message;
             try {
@@ -57,8 +56,9 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                 registerMessage.addHeader("deviceName", "rfid定位测试设备1号");
                 registerMessage.setDeviceId(deviceId);
                 registerMessage.setTimestamp(System.currentTimeMillis());
-                return Mono.justOrEmpty(registerMessage);
-
+                return session
+                        .send(EncodedMessage.simple(TcpMessage.of(MessageType.REGISTER_RESPONSE, RegisterResponse.of(deviceId)).toByteBuf()))
+                        .thenReturn(registerMessage);
             }
 
             // 请求登录

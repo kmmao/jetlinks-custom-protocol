@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jetlinks.core.utils.BytesUtils;
 
 @Getter
 @Setter
@@ -12,7 +13,7 @@ import lombok.Setter;
 public class TcpMessageHeader {
 
     // 起始标识 固定 55 aa
-    final private short startTag = 0x55aa;
+//    final private short startTag = 0x55aa;
 
     // 报文长度
     private short messageLength;
@@ -32,17 +33,17 @@ public class TcpMessageHeader {
     // 设备ID
     private String deviceId;
 
-    @Override
-    public String toString() {
-        return "TcpMessageHeader{" +
-                "startTag=" + startTag +
-                ", messageLength=" + messageLength +
-                ", messageTypeId=" + messageTypeId +
-                ", seqId=" + seqId +
-                ", protocolId=" + protocolId +
-                ", secureId=" + secureId +
-                ", deviceId='" + deviceId + '\'' +
-                '}';
+    public byte[] toBytes()
+    {
+        byte[] bytes = new byte[28];
+        BytesUtils.numberToBe(bytes, messageLength, 0 ,2);
+        BytesUtils.numberToBe(bytes, messageTypeId, 2, 2);
+        BytesUtils.numberToBe(bytes, seqId, 4, 4);
+        BytesUtils.numberToBe(bytes, protocolId, 8, 2);
+        BytesUtils.numberToBe(bytes, secureId, 10, 2);
+        byte[] deviceBytes = deviceId.getBytes();
+        System.arraycopy(deviceBytes, 0, bytes, 12, deviceBytes.length);
+        return bytes;
     }
 
 }
