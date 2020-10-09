@@ -1,20 +1,17 @@
 package org.company.protocol.rfid.message;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.company.protocol.rfid.TcpMessageHeader;
-import org.company.protocol.rfid.TcpPayload;
 import org.jetlinks.core.utils.BytesUtils;
 
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterResponse implements TcpPayload {
+public class RegisterResponse extends TcpMessageHeader {
 
     // 注册结果, 1字节
     private byte registerResult;
@@ -31,22 +28,19 @@ public class RegisterResponse implements TcpPayload {
     // crc16
     private short crc16;
 
-    private TcpMessageHeader header;
-
-    public ByteBuf toByteBuf(){
-        return Unpooled.wrappedBuffer(toBytes());
+    public RegisterResponse(byte[] bytes) {
     }
 
     @Override
     public byte[] toBytes() {
+
         byte[] bytesBody = new byte[41];
-        TcpMessageHeader head = getHeader();
-        head.setMessageLength((short)(bytesBody.length + 28));
-        head.setMessageTypeId((short)0x8008);
-        head.setProtocolId((short)0x0001);
-        head.setSecureId((short)0x8000);
-        head.setSeqId(1);
-        byte[] bytesHead = head.toBytes();
+        super.setMessageLength((short)(bytesBody.length + 28));
+        super.setMessageTypeId((short)0x8008);
+        super.setProtocolId((short)0x0001);
+        super.setSecureId((short)0x8000);
+        super.setSeqId(1);
+        byte[] bytesHead = super.toBytes();
 
         // 注册结果
         setRegisterResult((byte) 1);
@@ -74,19 +68,10 @@ public class RegisterResponse implements TcpPayload {
         return result;
     }
 
-    @Override
-    public void fromBytes(byte[] bytes, int offset) {
-
-    }
-
     public static RegisterResponse of(String deviceID)
     {
         RegisterResponse rr = new RegisterResponse();
-        TcpMessageHeader head = new TcpMessageHeader();
-        head.setDeviceId(deviceID);
-        rr.setHeader(head);
+        rr.setDeviceId(deviceID);
         return rr;
     }
-
-
 }

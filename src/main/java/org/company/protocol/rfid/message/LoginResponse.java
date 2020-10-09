@@ -5,13 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.company.protocol.rfid.TcpMessageHeader;
-import org.company.protocol.rfid.TcpPayload;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponse implements TcpPayload {
+public class LoginResponse extends TcpMessageHeader {
 
     // 登录结果
     private byte loginResult;
@@ -19,18 +18,15 @@ public class LoginResponse implements TcpPayload {
     // 实时时间, 6个字节
     private byte[] timeStamp;
 
-    private TcpMessageHeader header;
-
     @Override
     public byte[] toBytes() {
         byte[] bytesBody = new byte[7];
-        TcpMessageHeader head = getHeader();
-        head.setMessageLength((short)(bytesBody.length + 28));
-        head.setMessageTypeId((short)0x8001);
-        head.setSeqId(1);
-        head.setProtocolId((short)0x0001);
-        head.setSecureId((short)0x8000);
-        byte[] bytesHead = head.toBytes();
+        super.setMessageLength((short)(bytesBody.length + 28));
+        super.setMessageTypeId((short)0x8001);
+        super.setSeqId(1);
+        super.setProtocolId((short)0x0001);
+        super.setSecureId((short)0x8000);
+        byte[] bytesHead = super.toBytes();
 
         // 登录结果
         bytesBody[0] = 0;
@@ -48,17 +44,15 @@ public class LoginResponse implements TcpPayload {
         return result;
     }
 
-    @Override
-    public void fromBytes(byte[] bytes, int offset) {
-
-    }
-
     public static LoginResponse of(String deviceId)
     {
         LoginResponse loginResponse = new LoginResponse();
-        TcpMessageHeader head = new TcpMessageHeader();
-        head.setDeviceId(deviceId);
-        loginResponse.setHeader(head);
+        loginResponse.setDeviceId(deviceId);
         return loginResponse;
+    }
+
+    public LoginResponse(byte[] bytes)
+    {
+
     }
 }

@@ -14,22 +14,15 @@ import lombok.Setter;
 @AllArgsConstructor(staticName = "of")
 public class TcpMessage {
     private MessageType type;
-    private TcpPayload data;
-
+    private TcpMessageHeader data;
     public static TcpMessage of(byte[] payload) {
         MessageType type = MessageType.of(payload).orElseThrow(IllegalArgumentException::new);
-        return TcpMessage.of(type, type.read(payload, 30));
+        TcpMessageHeader data = type.getPayLoadSupplier().apply(payload);
+        return TcpMessage.of(type, data);
     }
 
     public ByteBuf toByteBuf(){
-        return Unpooled.wrappedBuffer(toBytes());
-    }
-
-    public byte[] toBytes() {
-
-        byte[] buf = type.toBytes(data);
-
-        return buf;
+        return Unpooled.wrappedBuffer(data.toBytes());
     }
 
 }

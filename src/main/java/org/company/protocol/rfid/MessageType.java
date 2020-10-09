@@ -3,7 +3,6 @@ package org.company.protocol.rfid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.company.protocol.rfid.message.Login;
 import org.company.protocol.rfid.message.LoginResponse;
 import org.company.protocol.rfid.message.Register;
@@ -12,7 +11,7 @@ import org.jetlinks.core.utils.BytesUtils;
 
 import javax.validation.constraints.NotNull;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 @AllArgsConstructor
 @Getter
@@ -26,28 +25,8 @@ public enum MessageType {
     private short id;
 
     private String text;
-
-    private Supplier<TcpPayload> payLoadSupplier;
-
-    public TcpPayload read(byte[] payload, int offset)
-    {
-        TcpPayload tcpPayload = payLoadSupplier.get();
-        boolean crc16CheckResult = tcpPayload.checkCrc16(payload);
-        if (crc16CheckResult == false)
-        {
-            throw new Crc16ErrorException();
-        }
-        tcpPayload.fromBytes(payload, offset);
-        return tcpPayload;
-    }
-
-    public byte[] toBytes(TcpPayload data)
-    {
-        if (data == null)
-            return new byte[0];
-        return data.toBytes();
-    }
-
+    
+    private Function<byte[], ? extends TcpMessageHeader> payLoadSupplier;
 
     @NotNull
     public static Optional<MessageType> of(byte[] payload)

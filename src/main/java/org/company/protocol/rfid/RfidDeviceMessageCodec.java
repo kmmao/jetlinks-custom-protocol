@@ -57,7 +57,7 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             if (message.getType() == MessageType.REGISTER)
             {
                 Register request = ((Register)message.getData());
-                String deviceId = request.getHeader().getDeviceId();
+                String deviceId = request.getDeviceId();
                 DeviceRegisterMessage registerMessage = new DeviceRegisterMessage();
                 registerMessage.addHeader("productId", "001");
                 registerMessage.addHeader("deviceName", "rfid定位测试设备1号");
@@ -72,7 +72,7 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             if (message.getType() == MessageType.LOGIN)
             {
                 Login request = ((Login) message.getData());
-                String deviceId = request.getHeader().getDeviceId();
+                String deviceId = request.getDeviceId();
                 return registry
                         .getDevice(deviceId)
                         .flatMap(msg -> {
