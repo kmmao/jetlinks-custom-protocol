@@ -4,7 +4,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.company.protocol.rfid.message.Login;
+import org.company.protocol.rfid.message.LoginResponse;
 import org.company.protocol.rfid.message.Register;
 import org.company.protocol.rfid.message.RegisterResponse;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -41,6 +43,11 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             try {
                 message = TcpMessage.of(payload);
             }
+            catch (Crc16ErrorException e)
+            {
+                log.info("crc16 incorrect");
+                return Mono.error(e);
+            }
             catch (Exception e)
             {
                 return Mono.error(e);
@@ -72,7 +79,9 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                             DeviceOnlineMessage onlineMessage = new DeviceOnlineMessage();
                             onlineMessage.setDeviceId(deviceId);
                             onlineMessage.setTimestamp(System.currentTimeMillis());
-                            return Mono.justOrEmpty(onlineMessage);
+                            return session
+                                    .send(EncodedMessage.simple(TcpMessage.of(MessageType.LOGIN_RESPONSE, LoginResponse.of(deviceId)).toByteBuf()))
+                                    .thenReturn(onlineMessage);
                         });
             }
 

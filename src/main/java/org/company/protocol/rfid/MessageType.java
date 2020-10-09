@@ -3,11 +3,12 @@ package org.company.protocol.rfid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.company.protocol.rfid.exception.Crc16ErrorException;
+import org.company.protocol.rfid.message.Login;
 import org.company.protocol.rfid.message.LoginResponse;
+import org.company.protocol.rfid.message.Register;
 import org.company.protocol.rfid.message.RegisterResponse;
 import org.jetlinks.core.utils.BytesUtils;
-import org.company.protocol.rfid.message.Login;
-import org.company.protocol.rfid.message.Register;
 
 import javax.validation.constraints.NotNull;
 import java.util.Optional;
@@ -31,6 +32,11 @@ public enum MessageType {
     public TcpPayload read(byte[] payload, int offset)
     {
         TcpPayload tcpPayload = payLoadSupplier.get();
+        boolean crc16CheckResult = tcpPayload.checkCrc16(payload);
+        if (crc16CheckResult == false)
+        {
+            throw new Crc16ErrorException();
+        }
         tcpPayload.fromBytes(payload, offset);
         return tcpPayload;
     }

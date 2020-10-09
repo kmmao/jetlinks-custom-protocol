@@ -36,8 +36,22 @@ public interface TcpPayload {
                     crc <<= 1;
             }
         }
-//        return Integer.toHexString(crc & 0xffff).toUpperCase();
-        return crc;
+        return crc & 0xffff;
+    }
+
+    default byte[] byteMerge(byte[] b1, byte[] b2)
+    {
+        byte [] result = new byte[b1.length + b2.length];
+        System.arraycopy(b1, 0, result, 0, b1.length);
+        System.arraycopy(b2, 0, result, b1.length, b2.length);
+        return result;
+    }
+
+    default byte[] doGetCrc(byte[] bytesHead, byte[] bytesBody)
+    {
+        byte[] byteCrc16 = new byte[2];
+        BytesUtils.numberToBe(byteCrc16, getCrc(byteMerge(bytesHead, bytesBody)), 0, 2);
+        return byteCrc16;
     }
 
     default byte[] getHostTimeStamp()
@@ -58,12 +72,33 @@ public interface TcpPayload {
         return new byte[32];
     }
 
-    default byte[] byteMerge(byte[] b1, byte[] b2)
+    default byte[] getStartTag()
     {
-        byte [] result = new byte[b1.length + b2.length];
-        System.arraycopy(b1, 0, result, 0, b1.length);
-        System.arraycopy(b2, 0, result, b1.length, b2.length);
+        byte[] startTag = new byte[2];
+        BytesUtils.numberToBe(startTag, 0x55aa, 0, 2);
+        return startTag;
+    }
+
+    default byte[] getFinalMessage(byte[] byteStartTag, byte[] bytesHead, byte[] bytesBody, byte[] byteCrc16)
+    {
+        byte[] result = new byte[bytesHead.length + bytesBody.length + byteStartTag.length + byteCrc16.length];
+        System.arraycopy(byteStartTag, 0, result, 0 ,byteStartTag.length);
+        System.arraycopy(bytesHead, 0, result, byteStartTag.length, bytesHead.length);
+        System.arraycopy(bytesBody, 0, result, byteStartTag.length + bytesHead.length, bytesBody.length);
+        System.arraycopy(byteCrc16, 0, result, byteStartTag.length + bytesHead.length + bytesBody.length, byteCrc16.length);
         return result;
     }
 
+    default boolean checkCrc16(byte[] payload)
+    {
+        int payloadBodyLength = BytesUtils.beToInt(payload, 2, 2);
+        int crcInpayload = BytesUtils.beToInt(payload, 2+payloadBodyLength, 2);
+        byte[] payloadTobeCrc = new byte[payloadBodyLength];
+        System.arraycopy(payload, 2, payloadTobeCrc, 0, payloadBodyLength);
+        int crcCalced = getCrc(payloadTobeCrc);
+        if (crcInpayload == crcCalced)
+            return true;
+        else
+            return false;
+    }
 }

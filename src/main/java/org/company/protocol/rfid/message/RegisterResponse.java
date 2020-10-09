@@ -65,22 +65,12 @@ public class RegisterResponse implements TcpPayload {
         System.arraycopy(getHostIp(), 0, bytesBody, 7, 32);
         BytesUtils.numberToBe(bytesBody, getPort(), 39, 2);
 
-        byte[] byteCrc16 = new byte[2];
+        byte[] byteCrc16 = doGetCrc(bytesHead, bytesBody);
 
-        BytesUtils.numberToBe(byteCrc16, getCrc(byteMerge(bytesHead, bytesBody)), 0, 2);
-        byte[] byteStartTag = new byte[2];
-        BytesUtils.numberToBe(byteStartTag, 0x55aa, 0, 2);
+        byte[] byteStartTag = getStartTag();
 
-        byte[] result = new byte[bytesHead.length + bytesBody.length + byteStartTag.length + byteCrc16.length];
+        byte[] result = getFinalMessage(byteStartTag, bytesHead, bytesBody, byteCrc16);
 
-        System.arraycopy(byteStartTag, 0, result, 0 ,byteStartTag.length);
-        System.arraycopy(bytesHead,
-                0,
-                result,
-                byteStartTag.length ,
-                bytesHead.length);
-        System.arraycopy(bytesBody, 0, result, byteStartTag.length + bytesHead.length ,bytesBody.length);
-        System.arraycopy(byteCrc16, 0, result, byteStartTag.length + bytesHead.length + bytesBody.length ,byteCrc16.length);
         return result;
     }
 
