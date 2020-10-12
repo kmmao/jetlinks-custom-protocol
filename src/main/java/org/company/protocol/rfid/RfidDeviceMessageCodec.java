@@ -5,10 +5,7 @@ import io.netty.buffer.ByteBufUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.company.protocol.rfid.exception.Crc16ErrorException;
-import org.company.protocol.rfid.message.Login;
-import org.company.protocol.rfid.message.LoginResponse;
-import org.company.protocol.rfid.message.Register;
-import org.company.protocol.rfid.message.RegisterResponse;
+import org.company.protocol.rfid.message.*;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.message.DeviceOnlineMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
@@ -53,11 +50,12 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                 return Mono.error(e);
             }
 
+            TcpMessageHeader head = message.getData();
+            String deviceId = head.getDeviceId();
+
             // 请求注册
             if (message.getType() == MessageType.REGISTER)
             {
-                Register request = ((Register)message.getData());
-                String deviceId = request.getDeviceId();
                 DeviceRegisterMessage registerMessage = new DeviceRegisterMessage();
                 registerMessage.addHeader("productId", "001");
                 registerMessage.addHeader("deviceName", "rfid定位测试设备1号");
@@ -71,8 +69,6 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             // 请求登录
             if (message.getType() == MessageType.LOGIN)
             {
-                Login request = ((Login) message.getData());
-                String deviceId = request.getDeviceId();
                 return registry
                         .getDevice(deviceId)
                         .flatMap(msg -> {
@@ -85,8 +81,10 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                         });
             }
 
-            if (message.getData() instanceof TcpDeviceMessage) {
-                return Mono.justOrEmpty(((TcpDeviceMessage) message.getData()).toDeviceMessage());
+            if (message.getData() instanceof HeartBeat) {
+                return session
+                        .send(EncodedMessage.simple(TcpMessage.of(MessageType.HEART_RESPONSE, HeartBeatResponse.of(deviceId)).toByteBuf()))
+                        .thenReturn(((TcpDeviceMessage) message.getData()).toDeviceMessage());
             }
             return Mono.just(((TcpDeviceMessage) message.getData()).toDeviceMessage());
         });

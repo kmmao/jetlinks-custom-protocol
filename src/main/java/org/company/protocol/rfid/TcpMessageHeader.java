@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.jetlinks.core.utils.BytesUtils;
 
 @Getter
