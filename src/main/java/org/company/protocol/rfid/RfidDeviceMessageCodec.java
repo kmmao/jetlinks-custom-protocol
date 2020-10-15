@@ -95,7 +95,9 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                 List<DeviceMessage> labelInfoList = new LinkedList<>();
                 for (Upload obj: ((Upload)message.getData()).getObjList())
                 {
-                    labelInfoList.add(obj.toRegisterInfo());
+                    if (registry.getDevice(String.valueOf(obj.getLabelId())) == null) {
+                        labelInfoList.add(obj.toRegisterInfo());
+                    }
                     labelInfoList.add(obj.toPropertyInfo());
                 }
                 return Flux.fromIterable(labelInfoList);

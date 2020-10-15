@@ -64,6 +64,11 @@ public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLa
         return this.toPropertyInfo();
     }
 
+    public long getLabelId()
+    {
+        return this.getLabelId();
+    }
+
     @Override
     public DeviceMessage toDeviceMessage() {
 //        DeviceMessage msg = null;
