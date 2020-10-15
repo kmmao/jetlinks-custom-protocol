@@ -19,7 +19,8 @@ public enum MessageType {
     LOGIN((short)0x0001, "登录", Login::new),
     LOGIN_RESPONSE((short)0x8001, "登录回复", LoginResponse::new),
     HEART((short)0x0003, "心跳", HeartBeat::new),
-    HEART_RESPONSE((short)0x8003, "心跳回复", HeartBeatResponse::new);
+    HEART_RESPONSE((short)0x8003, "心跳回复", HeartBeatResponse::new),
+    UPLOAD((short)0x0004, "设备数据上报", Upload::new);
 
     private short id;
 

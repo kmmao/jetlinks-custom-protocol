@@ -14,6 +14,7 @@ public class TcpMessageHeader implements TcpPayload {
 
     // 起始标识 固定 55 aa
 //    final private short startTag = 0x55aa;
+    final private int headLength = 28;
 
     // 报文长度
     private short messageLength;
@@ -22,7 +23,7 @@ public class TcpMessageHeader implements TcpPayload {
     private short messageTypeId;
 
     // 报文流水号
-    private int seqId;
+    private static int seqId = 0;
 
     // 报文协议版本
     private short protocolId;
@@ -54,10 +55,10 @@ public class TcpMessageHeader implements TcpPayload {
     public TcpMessageHeader (byte[] payload)
     {
         boolean result = checkCrc16(payload);
-        if (result == false)
-        {
-            throw new Crc16ErrorException();
-        }
+//        if (result == false)
+//        {
+//            throw new Crc16ErrorException();
+//        }
         short messageLength = (short) BytesUtils.beToInt(payload, 2, 2);
         short messageTypeId = (short)BytesUtils.beToInt(payload, 4, 2);
         int seqId = BytesUtils.beToInt(payload, 6, 4);
@@ -66,9 +67,14 @@ public class TcpMessageHeader implements TcpPayload {
         String deviceId = new String(payload, 14, 15);
         this.messageLength = messageLength;
         this.messageTypeId = messageTypeId;
-        this.seqId = seqId;
+//        this.seqId = seqId;
         this.protocolId = protocolId;
         this.secureId = secureId;
         this.deviceId = deviceId;
+    }
+
+    public void seqIdInc()
+    {
+        this.seqId++;
     }
 }

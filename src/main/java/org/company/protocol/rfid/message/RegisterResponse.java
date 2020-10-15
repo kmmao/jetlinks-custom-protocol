@@ -39,7 +39,8 @@ public class RegisterResponse extends TcpMessageHeader {
         super.setMessageTypeId((short)0x8008);
         super.setProtocolId((short)0x0001);
         super.setSecureId((short)0x8000);
-        super.setSeqId(1);
+//        super.setSeqId(1);
+        super.seqIdInc();
         byte[] bytesHead = super.toBytes();
 
         // 注册结果

@@ -23,7 +23,7 @@ public class LoginResponse extends TcpMessageHeader {
         byte[] bytesBody = new byte[7];
         super.setMessageLength((short)(bytesBody.length + 28));
         super.setMessageTypeId((short)0x8001);
-        super.setSeqId(1);
+        super.seqIdInc();
         super.setProtocolId((short)0x0001);
         super.setSecureId((short)0x8000);
         byte[] bytesHead = super.toBytes();

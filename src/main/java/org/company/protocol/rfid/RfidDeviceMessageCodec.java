@@ -7,15 +7,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.company.protocol.rfid.message.*;
 import org.jetlinks.core.device.DeviceRegistry;
+import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceOnlineMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
 import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
+import java.util.LinkedList;
+import java.util.List;
 
 @Slf4j
 @AllArgsConstructor
@@ -31,7 +35,7 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
     @NotNull
     @Override
     public Publisher<? extends Message> decode(@NotNull MessageDecodeContext messageDecodeContext) {
-        return Mono.defer(() -> {
+        return Flux.defer(() -> {
             FromDeviceMessageContext ctx = ((FromDeviceMessageContext) messageDecodeContext);
             ByteBuf byteBuf = ctx.getMessage().getPayload();
             byte[] payload = ByteBufUtil.getBytes(byteBuf, 0, byteBuf.readableBytes(), false);
@@ -57,10 +61,10 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             if (message.getType() == MessageType.REGISTER)
             {
                 DeviceRegisterMessage registerMessage = new DeviceRegisterMessage();
-                registerMessage.addHeader("productId", "001");
-                registerMessage.addHeader("deviceName", "rfid定位测试设备1号");
+                registerMessage.addHeader("productId", "002");
+                registerMessage.addHeader("deviceName", "rfid定位测试设备" + deviceId);
                 registerMessage.setDeviceId(deviceId);
-                registerMessage.setTimestamp(System.currentTimeMillis());
+//                registerMessage.setTimestamp(System.currentTimeMillis());
                 return session
                         .send(EncodedMessage.simple(TcpMessage.of(MessageType.REGISTER_RESPONSE, RegisterResponse.of(deviceId)).toByteBuf()))
                         .thenReturn(registerMessage);
@@ -85,6 +89,16 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                 return session
                         .send(EncodedMessage.simple(TcpMessage.of(MessageType.HEART_RESPONSE, HeartBeatResponse.of(deviceId)).toByteBuf()))
                         .thenReturn(((TcpDeviceMessage) message.getData()).toDeviceMessage());
+            }
+
+            if (message.getData() instanceof Upload) {
+                List<DeviceMessage> labelInfoList = new LinkedList<>();
+                for (Upload obj: ((Upload)message.getData()).getObjList())
+                {
+                    labelInfoList.add(obj.toRegisterInfo());
+                    labelInfoList.add(obj.toPropertyInfo());
+                }
+                return Flux.fromIterable(labelInfoList);
             }
             return Mono.just(((TcpDeviceMessage) message.getData()).toDeviceMessage());
         });

@@ -6,17 +6,6 @@ import java.util.Calendar;
 
 public interface TcpPayloadUtils {
 
-//    default TcpMessageHeader createHeader(byte[] payload)
-//    {
-//        short messageLength = (short) BytesUtils.beToInt(payload, 2, 2);
-//        short messageTypeId = (short)BytesUtils.beToInt(payload, 4, 2);
-//        int seqId = BytesUtils.beToInt(payload, 6, 4);
-//        short protocolId = (short)BytesUtils.beToInt(payload, 10, 2);
-//        short secureId = (short)BytesUtils.beToInt(payload, 12, 2);
-//        String deviceId = new String(payload, 14, 15);
-//        return TcpMessageHeader.of(messageLength, messageTypeId, seqId, protocolId, secureId, deviceId);
-//    }
-
     default int getCrc(byte[] data)
     {
         int crc = 0xffff;
@@ -62,6 +51,11 @@ public interface TcpPayloadUtils {
         timeStamp[4] = (byte)calendar.get(Calendar.MINUTE);
         timeStamp[5] = (byte)calendar.get(Calendar.SECOND);
         return timeStamp;
+    }
+
+    default String toTimeString(byte[] bytes)
+    {
+        return String.format("%d-%02d-%02d %02d:%02d:%02d", bytes[0] + 2000, bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
     }
 
     default byte[] getHostIp()
