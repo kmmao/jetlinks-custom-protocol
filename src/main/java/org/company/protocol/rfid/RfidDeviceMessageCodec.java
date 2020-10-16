@@ -64,7 +64,6 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                 registerMessage.addHeader("productId", "002");
                 registerMessage.addHeader("deviceName", "rfid定位测试设备" + deviceId);
                 registerMessage.setDeviceId(deviceId);
-//                registerMessage.setTimestamp(System.currentTimeMillis());
                 return session
                         .send(EncodedMessage.simple(TcpMessage.of(MessageType.REGISTER_RESPONSE, RegisterResponse.of(deviceId)).toByteBuf()))
                         .thenReturn(registerMessage);
@@ -93,14 +92,18 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
 
             if (message.getData() instanceof Upload) {
                 List<DeviceMessage> labelInfoList = new LinkedList<>();
-                for (Upload obj: ((Upload)message.getData()).getObjList())
-                {
-                    if (registry.getDevice(String.valueOf(obj.getLabelId())) == null) {
-                        labelInfoList.add(obj.toRegisterInfo());
-                    }
-                    labelInfoList.add(obj.toPropertyInfo());
-                }
-                return Flux.fromIterable(labelInfoList);
+
+                return session.send(EncodedMessage.simple(TcpMessage.of(MessageType.UPLOAD_RESPONSE, UploadResponse.of(deviceId)).toByteBuf()))
+                        .thenMany(Flux.create((t) -> {
+                                for (Upload obj: ((Upload)message.getData()).getObjList())
+                                {
+                                    if (registry.getDevice(String.valueOf(obj.getLabelId())) == null) {
+                                        t.next(obj.toRegisterInfo());
+                                    }
+                                    t.next(obj.toPropertyInfo());
+                                }
+                                t.complete();
+                                }));
             }
             return Mono.just(((TcpDeviceMessage) message.getData()).toDeviceMessage());
         });
