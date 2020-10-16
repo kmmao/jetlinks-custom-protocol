@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBufUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.company.protocol.rfid.exception.Crc16ErrorException;
+import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
 import org.company.protocol.rfid.message.*;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.message.DeviceMessage;
@@ -47,6 +48,11 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             catch (Crc16ErrorException e)
             {
                 log.info("crc16 incorrect");
+                return Mono.error(e);
+            }
+            catch (LabelCheckSumErrorException e)
+            {
+                log.info("id check sum error");
                 return Mono.error(e);
             }
             catch (Exception e)

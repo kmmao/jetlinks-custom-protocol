@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
 import org.jetlinks.core.message.ChildDeviceMessage;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
@@ -32,12 +33,19 @@ public class Tlv8b01 extends Upload {
 
     public Tlv8b01(byte[] bytes)
     {
+        byte[] idCheckSumByte = new byte[5];
         type = (short)BytesUtils.beToInt(bytes, 0, 2);
         length = (short)BytesUtils.beToInt(bytes, 2, 2);
         antennaChannel = bytes[4];
         labelType = bytes[5];
         labelId = BytesUtils.beToLong(bytes, 6, 4);
         idCheckSum = bytes[10];
+        System.arraycopy(bytes, 5, idCheckSumByte, 0, 5);
+        byte checkSumResult = sendRcvByteNum(idCheckSumByte);
+        if (checkSumResult != idCheckSum)
+        {
+            throw new LabelCheckSumErrorException();
+        }
         labelStatus = bytes[13];
         rssi = bytes[14];
         timeStamp = new byte[6];

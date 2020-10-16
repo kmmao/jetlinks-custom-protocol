@@ -92,4 +92,15 @@ public interface TcpPayloadUtils {
         else
             return false;
     }
+
+    default byte sendRcvByteNum(byte[] bytes)
+    {
+        byte sum = 0;
+        for (int i = 0; i < bytes.length; i++)
+        {
+            sum += bytes[i];
+        }
+        byte result = (byte)(~sum + 1);
+        return result;
+    }
 }

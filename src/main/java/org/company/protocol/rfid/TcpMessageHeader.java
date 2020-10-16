@@ -67,7 +67,6 @@ public class TcpMessageHeader implements TcpPayload {
         String deviceId = new String(payload, 14, 15);
         this.messageLength = messageLength;
         this.messageTypeId = messageTypeId;
-//        this.seqId = seqId;
         this.protocolId = protocolId;
         this.secureId = secureId;
         this.deviceId = deviceId;

@@ -18,15 +18,12 @@ import java.util.List;
 @Getter
 public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLabelPayload {
 
-//    private Map<TlvType, Upload> map;
-
     private List<Upload> objList;
 
     public Upload(byte[] bytes)
     {
         super(bytes);
         short bodyLenTotal = (short)(BytesUtils.beToInt(bytes, 2, 2));
-//        this.map = new HashMap<TlvType, Upload>();
         this.objList = new LinkedList<>();
 
         int lenTotalLeft = bodyLenTotal - super.getHeadLength();
@@ -44,7 +41,6 @@ public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLa
                 Upload tlvObj = type.getPayLoadSupplier().apply(tlvRawData);
                 tlvObj.setDeviceId(this.getDeviceId());
                 objList.add(tlvObj);
-//                map.put(type, tlvObj);
                 lenTotalLeft -= tlvRawDataLength;
                 if (lenTotalLeft > 0) {
                     tlvs = new byte[lenTotalLeft];
