@@ -109,7 +109,6 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                                 t.complete();
                                 }));
             }
-//            return Mono.just(((TcpDeviceMessage) message.getData()).toDeviceMessage());
             log.warn("No match type. Now is " + String.valueOf(message.getType().getId()));
             return null;
         });

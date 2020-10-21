@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
 import org.jetlinks.core.message.ChildDeviceMessage;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
-import org.jetlinks.core.utils.BytesUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +19,11 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Slf4j
 public class Tlv8b01 extends TlvHeader {
     private byte antennaChannel;
     private byte labelType;
-    private long labelId;
+    private String labelId;
     private byte idCheckSum;
     // 携带信息,目前暂未使用
     private short dummy;
@@ -35,7 +37,9 @@ public class Tlv8b01 extends TlvHeader {
         byte[] idCheckSumByte = new byte[5];
         antennaChannel = bytes[4];
         labelType = bytes[5];
-        labelId = BytesUtils.beToLong(bytes, 6, 4);
+        byte[] labelBuf = new byte[4];
+        System.arraycopy(bytes, 6, labelBuf, 0, 4);
+        labelId = Hex.encodeHexString(labelBuf);
         idCheckSum = bytes[10];
         System.arraycopy(bytes, 5, idCheckSumByte, 0, 5);
         byte checkSumResult = sendRcvByteNum(idCheckSumByte);
@@ -53,10 +57,10 @@ public class Tlv8b01 extends TlvHeader {
         DeviceRegisterMessage deviceRegisterMessage = new DeviceRegisterMessage();
         ChildDeviceMessage child = new ChildDeviceMessage();
         // 设置子设备id
-        child.setChildDeviceId(String.valueOf(this.getLabelId()));
+        child.setChildDeviceId(this.getLabelId());
         // 设置子设备的父设备id
         child.setDeviceId(this.getDeviceId());
-        deviceRegisterMessage.setDeviceId(String.valueOf(this.getLabelId()));
+        deviceRegisterMessage.setDeviceId(this.getLabelId());
         deviceRegisterMessage.addHeader("productId", "002-8b01");
         deviceRegisterMessage.addHeader("deviceName", "rfid定位标签" + this.getLabelId());
         child.setChildDeviceMessage(deviceRegisterMessage);
@@ -67,17 +71,23 @@ public class Tlv8b01 extends TlvHeader {
         ReportPropertyMessage reportPropertyMessage = new ReportPropertyMessage();
         ChildDeviceMessage child = new ChildDeviceMessage();
         // 设置子设备id
-        child.setChildDeviceId(String.valueOf(this.getLabelId()));
+        child.setChildDeviceId(this.getLabelId());
         // 设置子设备的父设备id
         child.setDeviceId(this.getDeviceId());
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put("antennaChannel", antennaChannel);
         properties.put("labelType", labelType);
         properties.put("labelId", labelId);
         properties.put("idCheckSum", idCheckSum);
-        properties.put("labelStatus", labelStatus);
         properties.put("rssi", rssi);
         properties.put("timeStamp", toTimeString(timeStamp));
+        int isInboundary = (antennaChannel & 0x80) >> 7;
+        int attachStation = (antennaChannel & 0x40) >> 6;
+        int isRemoved = (labelStatus & 0x10) >> 4;
+        int lowPower = (labelStatus & 0x01);
+        properties.put("isInboundary", isInboundary);
+        properties.put("attachStation", attachStation);
+        properties.put("isRemoved", isRemoved);
+        properties.put("lowPower", lowPower);
         reportPropertyMessage.setProperties(properties);
         reportPropertyMessage.setDeviceId(String.valueOf(this.getLabelId()));
         child.setChildDeviceMessage(reportPropertyMessage);
