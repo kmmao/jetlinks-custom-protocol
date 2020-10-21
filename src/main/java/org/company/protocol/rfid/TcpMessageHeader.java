@@ -23,7 +23,7 @@ public class TcpMessageHeader implements TcpPayload {
     private short messageTypeId;
 
     // 报文流水号
-    private static int seqId = 0;
+    private int seqId;
 
     // 报文协议版本
     private short protocolId;
@@ -70,10 +70,6 @@ public class TcpMessageHeader implements TcpPayload {
         this.protocolId = protocolId;
         this.secureId = secureId;
         this.deviceId = deviceId;
-    }
-
-    public void seqIdInc()
-    {
-        this.seqId++;
+        this.seqId = seqId;
     }
 }

@@ -8,7 +8,7 @@ import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
 import org.company.protocol.rfid.message.*;
 import org.jetlinks.core.device.DeviceRegistry;
-import org.jetlinks.core.message.DeviceMessage;
+import org.jetlinks.core.message.ChildDeviceMessage;
 import org.jetlinks.core.message.DeviceOnlineMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
 import org.jetlinks.core.message.Message;
@@ -19,10 +19,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
-import java.util.LinkedList;
-import java.util.List;
 
-@Slf4j
+@Slf4j(topic = "system.rfid")
 @AllArgsConstructor
 public class RfidDeviceMessageCodec implements DeviceMessageCodec {
 
@@ -47,12 +45,12 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             }
             catch (Crc16ErrorException e)
             {
-                log.info("crc16 incorrect");
+                log.error("crc16 incorrect");
                 return Mono.error(e);
             }
             catch (LabelCheckSumErrorException e)
             {
-                log.info("id check sum error");
+                log.error("id check sum error");
                 return Mono.error(e);
             }
             catch (Exception e)
@@ -62,6 +60,7 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
 
             TcpMessageHeader head = message.getData();
             String deviceId = head.getDeviceId();
+            int seqId = head.getSeqId();
 
             // 请求注册
             if (message.getType() == MessageType.REGISTER)
@@ -70,8 +69,10 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                 registerMessage.addHeader("productId", "002");
                 registerMessage.addHeader("deviceName", "rfid定位测试设备" + deviceId);
                 registerMessage.setDeviceId(deviceId);
+
+                ByteBuf encodedMessage = TcpMessage.of(MessageType.REGISTER_RESPONSE, RegisterResponse.of(deviceId, seqId)).toByteBuf();
                 return session
-                        .send(EncodedMessage.simple(TcpMessage.of(MessageType.REGISTER_RESPONSE, RegisterResponse.of(deviceId)).toByteBuf()))
+                        .send(EncodedMessage.simple(encodedMessage))
                         .thenReturn(registerMessage);
             }
 
@@ -85,39 +86,47 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                             onlineMessage.setDeviceId(deviceId);
                             onlineMessage.setTimestamp(System.currentTimeMillis());
                             return session
-                                    .send(EncodedMessage.simple(TcpMessage.of(MessageType.LOGIN_RESPONSE, LoginResponse.of(deviceId)).toByteBuf()))
+                                    .send(EncodedMessage.simple(TcpMessage.of(MessageType.LOGIN_RESPONSE, LoginResponse.of(deviceId, seqId)).toByteBuf()))
                                     .thenReturn(onlineMessage);
                         });
             }
 
             if (message.getData() instanceof HeartBeat) {
                 return session
-                        .send(EncodedMessage.simple(TcpMessage.of(MessageType.HEART_RESPONSE, HeartBeatResponse.of(deviceId)).toByteBuf()))
+                        .send(EncodedMessage.simple(TcpMessage.of(MessageType.HEART_RESPONSE, HeartBeatResponse.of(deviceId, seqId)).toByteBuf()))
                         .thenReturn(((TcpDeviceMessage) message.getData()).toDeviceMessage());
             }
 
             if (message.getData() instanceof Upload) {
-                List<DeviceMessage> labelInfoList = new LinkedList<>();
 
-                return session.send(EncodedMessage.simple(TcpMessage.of(MessageType.UPLOAD_RESPONSE, UploadResponse.of(deviceId)).toByteBuf()))
+                return session.send(EncodedMessage.simple(TcpMessage.of(MessageType.UPLOAD_RESPONSE, UploadResponse.of(deviceId, seqId)).toByteBuf()))
                         .thenMany(Flux.create((t) -> {
                                 for (Upload obj: ((Upload)message.getData()).getObjList())
                                 {
-                                    if (registry.getDevice(String.valueOf(obj.getLabelId())) == null) {
-                                        t.next(obj.toRegisterInfo());
-                                    }
+                                    t.next(obj.toRegisterInfo());
                                     t.next(obj.toPropertyInfo());
                                 }
                                 t.complete();
                                 }));
             }
-            return Mono.just(((TcpDeviceMessage) message.getData()).toDeviceMessage());
+//            return Mono.just(((TcpDeviceMessage) message.getData()).toDeviceMessage());
+            log.warn("No match type. Now is " + String.valueOf(message.getType().getId()));
+            return null;
         });
     }
 
     @NotNull
     @Override
     public Publisher<? extends EncodedMessage> encode(@NotNull MessageEncodeContext messageEncodeContext) {
-        return null;
+        log.info("encode");
+        Message message = messageEncodeContext.getMessage();
+        if (message instanceof ChildDeviceMessage)
+        {
+            log.info("ChildDeviceMessage");
+        }
+//        EncodedMessage.simple(TcpMessage.of(MessageType.LOGIN_RESPONSE, LoginResponse.of(deviceId));
+
+        return Mono.empty();
     }
+
 }

@@ -60,7 +60,16 @@ public interface TcpPayloadUtils {
 
     default byte[] getHostIp()
     {
-        return new byte[32];
+        String ip = "113.57.142.34";
+        byte[] ipBytes = ip.getBytes();
+        byte[] ipReal = new byte[32];
+        System.arraycopy(ipBytes, 0, ipReal, 0, ipBytes.length);
+        return ipReal;
+    }
+
+    default short getHostPort()
+    {
+        return (short)8101;
     }
 
     default byte[] getStartTag()

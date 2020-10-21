@@ -18,9 +18,7 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Tlv8b01 extends Upload {
-    private short type;
-    private short length;
+public class Tlv8b01 extends TlvHeader {
     private byte antennaChannel;
     private byte labelType;
     private long labelId;
@@ -33,9 +31,8 @@ public class Tlv8b01 extends Upload {
 
     public Tlv8b01(byte[] bytes)
     {
+        super(bytes);
         byte[] idCheckSumByte = new byte[5];
-        type = (short)BytesUtils.beToInt(bytes, 0, 2);
-        length = (short)BytesUtils.beToInt(bytes, 2, 2);
         antennaChannel = bytes[4];
         labelType = bytes[5];
         labelId = BytesUtils.beToLong(bytes, 6, 4);
@@ -85,10 +82,5 @@ public class Tlv8b01 extends Upload {
         reportPropertyMessage.setDeviceId(String.valueOf(this.getLabelId()));
         child.setChildDeviceMessage(reportPropertyMessage);
         return child;
-    }
-
-    @Override
-    public DeviceMessage toDeviceMessage() {
-        return null;
     }
 }

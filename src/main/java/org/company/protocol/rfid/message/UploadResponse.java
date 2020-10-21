@@ -24,10 +24,11 @@ public class UploadResponse extends TcpMessageHeader {
      */
     private byte[] timeStamp;
 
-    public static UploadResponse of(String deviceId)
+    public static UploadResponse of(String deviceId, int seqId)
     {
         UploadResponse uploadResponse = new UploadResponse();
         uploadResponse.setDeviceId(deviceId);
+        uploadResponse.setSeqId(seqId);
         return uploadResponse;
     }
 
@@ -45,9 +46,8 @@ public class UploadResponse extends TcpMessageHeader {
 
         super.setMessageLength((short)(bytesBody.length + 28));
         super.setMessageTypeId((short)0x8004);
-        super.seqIdInc();
-        super.setProtocolId((short)(0x0001));
-        super.setSecureId((short)0x8000);
+        super.setProtocolId((short)(0x0200));
+        super.setSecureId((short)0x0000);
         byte[] bytesHead = super.toBytes();
 
         // 报文头+报文体的crc16结果

@@ -23,9 +23,8 @@ public class LoginResponse extends TcpMessageHeader {
         byte[] bytesBody = new byte[7];
         super.setMessageLength((short)(bytesBody.length + 28));
         super.setMessageTypeId((short)0x8001);
-        super.seqIdInc();
-        super.setProtocolId((short)0x0001);
-        super.setSecureId((short)0x8000);
+        super.setProtocolId((short)0x0200);
+        super.setSecureId((short)0x0000);
         byte[] bytesHead = super.toBytes();
 
         // 登录结果
@@ -44,10 +43,11 @@ public class LoginResponse extends TcpMessageHeader {
         return result;
     }
 
-    public static LoginResponse of(String deviceId)
+    public static LoginResponse of(String deviceId, int seqId)
     {
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setDeviceId(deviceId);
+        loginResponse.setSeqId(seqId);
         return loginResponse;
     }
 

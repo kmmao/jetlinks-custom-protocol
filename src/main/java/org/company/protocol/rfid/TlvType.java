@@ -3,7 +3,7 @@ package org.company.protocol.rfid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.company.protocol.rfid.message.Tlv8b01;
-import org.company.protocol.rfid.message.Upload;
+import org.company.protocol.rfid.message.TlvHeader;
 
 import javax.validation.constraints.NotNull;
 import java.util.Optional;
@@ -20,7 +20,7 @@ public enum TlvType {
 
     private String text;
 
-    private Function<byte[], ? extends Upload> payLoadSupplier;
+    private Function<byte[], ? extends TlvHeader> payLoadSupplier;
 
     @NotNull
     public static Optional<TlvType> of(short type)

@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.company.protocol.rfid.RfidLabelPayload;
-import org.company.protocol.rfid.TcpDeviceMessage;
 import org.company.protocol.rfid.TcpMessageHeader;
 import org.company.protocol.rfid.TlvType;
 import org.jetlinks.core.message.DeviceMessage;
@@ -16,7 +15,7 @@ import java.util.List;
 @Slf4j
 @NoArgsConstructor
 @Getter
-public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLabelPayload {
+public class Upload extends TcpMessageHeader implements RfidLabelPayload {
 
     private List<Upload> objList;
 
@@ -25,12 +24,13 @@ public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLa
         super(bytes);
         short bodyLenTotal = (short)(BytesUtils.beToInt(bytes, 2, 2));
         this.objList = new LinkedList<>();
-
+        int offset = 30;
+        int index = 1;
         int lenTotalLeft = bodyLenTotal - super.getHeadLength();
         if (lenTotalLeft > 0)
         {
             byte[] tlvs = new byte[lenTotalLeft];
-            System.arraycopy(bytes, 30, tlvs, 0, lenTotalLeft);
+            System.arraycopy(bytes, offset, tlvs, 0, lenTotalLeft);
             while (lenTotalLeft > 0)
             {
                 short theType = (short)BytesUtils.beToInt(tlvs, 0, 2);
@@ -44,7 +44,8 @@ public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLa
                 lenTotalLeft -= tlvRawDataLength;
                 if (lenTotalLeft > 0) {
                     tlvs = new byte[lenTotalLeft];
-                    System.arraycopy(bytes, 30 + tlvRawDataLength, tlvs, 0, lenTotalLeft);
+                    System.arraycopy(bytes, offset + tlvRawDataLength * index, tlvs, 0, lenTotalLeft);
+                    index++;
                 }
             }
         }
@@ -62,8 +63,4 @@ public class Upload extends TcpMessageHeader implements TcpDeviceMessage, RfidLa
 
     public long getLabelId() { return this.getLabelId(); }
 
-    @Override
-    public DeviceMessage toDeviceMessage() {
-        return null;
-    }
 }
