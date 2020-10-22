@@ -77,17 +77,20 @@ public class Tlv8b01 extends TlvHeader {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put("labelType", labelType);
         properties.put("labelId", labelId);
-        properties.put("idCheckSum", idCheckSum);
         properties.put("rssi", rssi);
         properties.put("timeStamp", toTimeString(timeStamp));
+        // 标签是否在基站范围内。1：在范围内 0：不在范围内
         int isInboundary = (antennaChannel & 0x80) >> 7;
-        int attachStation = (antennaChannel & 0x40) >> 6;
+        // 基站停留标识。厂家人员说目前这字段不起作用
+//        int attachStation = (antennaChannel & 0x40) >> 6;
+        int antennaDireciton = (antennaChannel & 0x0f);
         int isRemoved = (labelStatus & 0x10) >> 4;
         int lowPower = (labelStatus & 0x01);
         properties.put("isInboundary", isInboundary);
-        properties.put("attachStation", attachStation);
+//        properties.put("attachStation", attachStation);
         properties.put("isRemoved", isRemoved);
         properties.put("lowPower", lowPower);
+        properties.put("antennaDireciton", antennaDireciton);
         reportPropertyMessage.setProperties(properties);
         reportPropertyMessage.setDeviceId(String.valueOf(this.getLabelId()));
         child.setChildDeviceMessage(reportPropertyMessage);
