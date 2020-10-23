@@ -92,7 +92,7 @@ public class Tlv8b01 extends TlvHeader {
         properties.put("lowPower", lowPower);
         properties.put("antennaDireciton", antennaDireciton);
         reportPropertyMessage.setProperties(properties);
-        reportPropertyMessage.setDeviceId(String.valueOf(this.getLabelId()));
+        reportPropertyMessage.setDeviceId(this.getLabelId());
         child.setChildDeviceMessage(reportPropertyMessage);
         return child;
     }
