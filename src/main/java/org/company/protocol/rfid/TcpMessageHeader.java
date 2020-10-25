@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.jetlinks.core.utils.BytesUtils;
 
 @Getter
@@ -55,10 +56,10 @@ public class TcpMessageHeader implements TcpPayload {
     public TcpMessageHeader (byte[] payload)
     {
         boolean result = checkCrc16(payload);
-//        if (result == false)
-//        {
-//            throw new Crc16ErrorException();
-//        }
+        if (result == false)
+        {
+            throw new Crc16ErrorException();
+        }
         short messageLength = (short) BytesUtils.beToInt(payload, 2, 2);
         short messageTypeId = (short)BytesUtils.beToInt(payload, 4, 2);
         int seqId = BytesUtils.beToInt(payload, 6, 4);

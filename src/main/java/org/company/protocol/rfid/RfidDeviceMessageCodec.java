@@ -8,7 +8,10 @@ import org.company.protocol.rfid.exception.Crc16ErrorException;
 import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
 import org.company.protocol.rfid.message.*;
 import org.jetlinks.core.device.DeviceRegistry;
-import org.jetlinks.core.message.*;
+import org.jetlinks.core.message.ChildDeviceMessage;
+import org.jetlinks.core.message.DeviceOnlineMessage;
+import org.jetlinks.core.message.DeviceRegisterMessage;
+import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 import org.jetlinks.core.server.session.DeviceSession;
@@ -17,6 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Slf4j(topic = "system.rfid")
 @AllArgsConstructor
@@ -102,19 +106,18 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
             }
 
             if (message.getData() instanceof Upload) {
+                List<Upload> obj = ((Upload) message.getData()).getObjList();
 
                 return session.send(EncodedMessage.simple(TcpMessage.of(MessageType.UPLOAD_RESPONSE, UploadResponse.of(deviceId, seqId)).toByteBuf()))
-                        .thenMany(Flux.create((t) -> {
-                                for (Upload obj: ((Upload)message.getData()).getObjList())
-                                {
-                                    t.next((ChildDeviceMessage)obj.toRegisterInfo());
-                                    t.next((ChildDeviceMessage)obj.toPropertyInfo());
-                                }
-                                t.complete();
-                                }));
+                        .thenMany(
+                                Flux.fromIterable(obj)
+                                .flatMap(msg -> registry.getDevice(((ChildDeviceMessage)(msg.toRegisterInfo())).getChildDeviceId())
+                                                        .flatMap(operator ->{return Mono.just(((ChildDeviceMessage)(msg.toPropertyInfo())));})
+                                                        .switchIfEmpty(Mono.defer(() -> {return Mono.just(((ChildDeviceMessage)(msg.toRegisterInfo())));})))
+                        );
             }
             log.warn("No match type. Now is " + String.valueOf(message.getType().getId()));
-            return null;
+            return Mono.empty();
         });
     }
 
