@@ -81,13 +81,13 @@ public class Tlv8b01 extends TlvHeader {
         properties.put("timeStamp", toTimeString(timeStamp));
         // 标签是否在基站范围内。1：在范围内 0：不在范围内
         int isInboundary = (antennaChannel & 0x80) >> 7;
-        // 基站停留标识。厂家人员说目前这字段不起作用
-//        int attachStation = (antennaChannel & 0x40) >> 6;
+        // 基站停留标识。1：在基站停留 0：不在基站停留
+        int attachStation = (antennaChannel & 0x40) >> 6;
         int antennaDireciton = (antennaChannel & 0x0f);
         int isRemoved = (labelStatus & 0x10) >> 4;
         int lowPower = (labelStatus & 0x01);
         properties.put("isInboundary", isInboundary);
-//        properties.put("attachStation", attachStation);
+        properties.put("attachStation", attachStation);
         properties.put("isRemoved", isRemoved);
         properties.put("lowPower", lowPower);
         properties.put("antennaDireciton", antennaDireciton);
