@@ -10,6 +10,7 @@ import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
 import org.jetlinks.core.message.ChildDeviceMessage;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceRegisterMessage;
+import org.jetlinks.core.message.DeviceUnRegisterMessage;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 
 import java.util.HashMap;
@@ -68,17 +69,44 @@ public class Tlv8b01 extends TlvHeader {
     }
 
     public DeviceMessage toPropertyInfo() {
+        // 标签是否在基站范围内。1：在范围内 0：不在范围内
+        int isInboundary = (antennaChannel & 0x80) >> 7;
+        // 基站停留标识。1：在基站停留 0：不在基站停留
+        int attachStation = (antennaChannel & 0x40) >> 6;
+
+        if (attachStation == 0 && isInboundary == 0)
+        {
+            return _unRegisterInfo();
+        }
+        else
+        {
+            return _toPropertyInfo();
+        }
+    }
+
+    private DeviceMessage _unRegisterInfo()
+    {
+        DeviceUnRegisterMessage deviceUnRegisterMessage = new DeviceUnRegisterMessage();
+        ChildDeviceMessage child = new ChildDeviceMessage();
+        // 设置子设备id
+        child.setChildDeviceId(this.getLabelId());
+        // 设置子设备的父设备id
+        child.setDeviceId(this.getDeviceId());
+        deviceUnRegisterMessage.setDeviceId(this.getLabelId());
+        deviceUnRegisterMessage.addHeader("productId", "002-8b01");
+        deviceUnRegisterMessage.addHeader("deviceName", "rfid定位标签" + this.getLabelId());
+        child.setChildDeviceMessage(deviceUnRegisterMessage);
+        return child;
+    }
+
+    private DeviceMessage _toPropertyInfo()
+    {
         ReportPropertyMessage reportPropertyMessage = new ReportPropertyMessage();
         ChildDeviceMessage child = new ChildDeviceMessage();
         // 设置子设备id
         child.setChildDeviceId(this.getLabelId());
         // 设置子设备的父设备id
         child.setDeviceId(this.getDeviceId());
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put("labelType", labelType);
-        properties.put("labelId", labelId);
-        properties.put("rssi", rssi);
-        properties.put("timeStamp", toTimeString(timeStamp));
         // 标签是否在基站范围内。1：在范围内 0：不在范围内
         int isInboundary = (antennaChannel & 0x80) >> 7;
         // 基站停留标识。1：在基站停留 0：不在基站停留
@@ -86,7 +114,12 @@ public class Tlv8b01 extends TlvHeader {
         int antennaDireciton = (antennaChannel & 0x0f);
         int isRemoved = (labelStatus & 0x10) >> 4;
         int lowPower = (labelStatus & 0x01);
-        properties.put("isInboundary", isInboundary);
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("labelType", labelType);
+        properties.put("labelId", labelId);
+        properties.put("rssi", rssi);
+        properties.put("timeStamp", toTimeString(timeStamp));
+        properties.put("isInboundary", attachStation > 0 ? "/" : String.valueOf(isInboundary));
         properties.put("attachStation", attachStation);
         properties.put("isRemoved", isRemoved);
         properties.put("lowPower", lowPower);
