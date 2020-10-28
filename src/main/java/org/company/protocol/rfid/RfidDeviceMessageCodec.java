@@ -120,8 +120,9 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                                                                                         .map(deviceId::equals);
                                                                             })
                                                     .flatMap(operator ->{return Mono.just(((ChildDeviceMessage)(msg.toPropertyInfo())));})
-                                                    .switchIfEmpty(Mono.defer(() -> {return Mono.just(((ChildDeviceMessage)(msg.toRegisterInfo())));})))
-                        );
+                                                    .switchIfEmpty(Mono.defer(() -> {return Mono.just(((ChildDeviceMessage)(msg.toRegisterInfo())));}))
+                                                    .mergeWith(Mono.just((ChildDeviceMessage)(msg.toPropertyInfo())))
+                        ));
             }
             log.warn("No match type. Now is " + String.valueOf(message.getType().getId()));
             return Mono.empty();
