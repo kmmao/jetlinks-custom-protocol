@@ -7,10 +7,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.company.protocol.rfid.exception.LabelCheckSumErrorException;
-import org.jetlinks.core.message.ChildDeviceMessage;
-import org.jetlinks.core.message.DeviceMessage;
-import org.jetlinks.core.message.DeviceRegisterMessage;
-import org.jetlinks.core.message.DeviceUnRegisterMessage;
+import org.jetlinks.core.message.*;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 
 import java.util.HashMap;
@@ -64,6 +61,7 @@ public class Tlv8b01 extends TlvHeader {
         deviceRegisterMessage.setDeviceId(this.getLabelId());
         deviceRegisterMessage.addHeader("productId", "002-8b01");
         deviceRegisterMessage.addHeader("deviceName", "rfid定位标签" + this.getLabelId());
+        deviceRegisterMessage.addHeader("keepOnlineTimeoutSeconds",300);
         child.setChildDeviceMessage(deviceRegisterMessage);
         return child;
     }
@@ -82,6 +80,14 @@ public class Tlv8b01 extends TlvHeader {
         {
             return _toPropertyInfo();
         }
+    }
+
+    public DeviceMessage toOnlineInfo()
+    {
+        DeviceOnlineMessage deviceOnlineMessage = new DeviceOnlineMessage();
+        deviceOnlineMessage.setDeviceId(this.getLabelId());
+        deviceOnlineMessage.addHeader("keepOnlineTimeoutSeconds",300);
+        return deviceOnlineMessage;
     }
 
     private DeviceMessage _unRegisterInfo()
