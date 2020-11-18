@@ -4,8 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.company.protocol.rfid.TcpMessageHeader;
 
+@Slf4j(topic = "system.rfid")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -24,11 +26,12 @@ public class HeartBeatResponse extends TcpMessageHeader {
      */
     private byte[] timeStamp;
 
-    public static HeartBeatResponse of(String deviceId, int seqId)
+    public static HeartBeatResponse of(String deviceId, int seqId, int ask)
     {
         HeartBeatResponse heartBeatResponse = new HeartBeatResponse();
         heartBeatResponse.setDeviceId(deviceId);
         heartBeatResponse.setSeqId(seqId);
+        heartBeatResponse.setOpIndicator((byte)ask);
         return heartBeatResponse;
     }
 
@@ -40,7 +43,7 @@ public class HeartBeatResponse extends TcpMessageHeader {
     public byte[] toBytes() {
         byte[] bytesBody = new byte[7];
         // 操作指示
-        bytesBody[0] = 0x00;
+        bytesBody[0] = opIndicator;
         // 平台时间
         System.arraycopy(getHostTimeStamp(), 0, bytesBody, 1, 6);
 

@@ -21,7 +21,9 @@ public enum MessageType {
     HEART((short)0x0003, "心跳", HeartBeat::new),
     HEART_RESPONSE((short)0x8003, "心跳回复", HeartBeatResponse::new),
     UPLOAD((short)0x0004, "设备数据上报", Upload::new),
-    UPLOAD_RESPONSE((short)0x8004, "设备数据上报回复", UploadResponse::new);
+    UPLOAD_RESPONSE((short)0x8004, "设备数据上报回复", UploadResponse::new),
+    CONFIG((short)0x000a, "配置参数", Config::new),
+    CONFIG_RESPONSE((short)0x800a, "配置参数回复", ConfigResponse::new);
 
     private short id;
 

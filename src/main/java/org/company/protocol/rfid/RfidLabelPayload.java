@@ -7,4 +7,6 @@ public interface RfidLabelPayload {
     DeviceMessage toRegisterInfo();
 
     DeviceMessage toPropertyInfo();
+
+    DeviceMessage toOnlineInfo();
 }

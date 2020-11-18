@@ -61,6 +61,12 @@ public class Upload extends TcpMessageHeader implements RfidLabelPayload {
         return this.toPropertyInfo();
     }
 
+    @Override
+    public DeviceMessage toOnlineInfo()
+    {
+        return this.toOnlineInfo();
+    }
+
     public String getLabelId() { return this.getLabelId(); }
 
 }
