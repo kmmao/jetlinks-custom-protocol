@@ -132,6 +132,8 @@ public class RfidDeviceMessageCodec implements DeviceMessageCodec {
                                                     .flatMap(operator -> Mono.just(((msg.toOnlineInfo()))))
                                                     .switchIfEmpty(Mono.defer(() -> Mono.just(((ChildDeviceMessage)(msg.toRegisterInfo())))))
                                                     .mergeWith(Mono.just((ChildDeviceMessage)(msg.toPropertyInfo())))
+                                                    .mergeWith(Mono.just(msg.toUnRegisterInfo()))
+                                                    .mergeWith(Mono.just(msg.toOffLineInfo()))
                         ));
             }
 

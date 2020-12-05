@@ -61,24 +61,49 @@ public class Tlv8b01 extends TlvHeader {
         deviceRegisterMessage.setDeviceId(this.getLabelId());
         deviceRegisterMessage.addHeader("productId", "002-8b01");
         deviceRegisterMessage.addHeader("deviceName", "rfid定位标签" + this.getLabelId());
-        deviceRegisterMessage.addHeader("keepOnlineTimeoutSeconds",300);
         child.setChildDeviceMessage(deviceRegisterMessage);
         return child;
     }
 
     public DeviceMessage toPropertyInfo() {
+        return _toPropertyInfo();
+    }
+
+    public DeviceMessage toUnRegisterInfo()
+    {
         // 标签是否在基站范围内。1：在范围内 0：不在范围内
         int isInboundary = (antennaChannel & 0x80) >> 7;
         // 基站停留标识。1：在基站停留 0：不在基站停留
         int attachStation = (antennaChannel & 0x40) >> 6;
 
+        // 当标签离开基站后，使标签注销，脱离与父设备的关联关系
         if (attachStation == 0 && isInboundary == 0)
         {
             return _unRegisterInfo();
         }
         else
         {
-            return _toPropertyInfo();
+            return toOnlineInfo();
+        }
+    }
+
+    public DeviceMessage toOffLineInfo()
+    {
+        // 标签是否在基站范围内。1：在范围内 0：不在范围内
+        int isInboundary = (antennaChannel & 0x80) >> 7;
+        // 基站停留标识。1：在基站停留 0：不在基站停留
+        int attachStation = (antennaChannel & 0x40) >> 6;
+
+        // 当标签离开基站后，使标签状态变为离线
+        if (attachStation == 0 && isInboundary == 0)
+        {
+            DeviceOfflineMessage deviceOfflineMessage = new DeviceOfflineMessage();
+            deviceOfflineMessage.setDeviceId(this.getLabelId());
+            return deviceOfflineMessage;
+        }
+        else
+        {
+            return toOnlineInfo();
         }
     }
 
@@ -86,7 +111,6 @@ public class Tlv8b01 extends TlvHeader {
     {
         DeviceOnlineMessage deviceOnlineMessage = new DeviceOnlineMessage();
         deviceOnlineMessage.setDeviceId(this.getLabelId());
-        deviceOnlineMessage.addHeader("keepOnlineTimeoutSeconds",300);
         return deviceOnlineMessage;
     }
 
